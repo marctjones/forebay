@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "deny": [
+      "Write(.idlergear/**)",
+      "Edit(.idlergear/**)",
+      "Write(.claude/settings.json)",
+      "Edit(.claude/settings.json)",
+      "Write(.claude/rules/**)",
+      "Edit(.claude/rules/**)",
+      "Write(.claude/hooks/**)",
+      "Edit(.claude/hooks/**)",
+      "Write(.mcp.json)",
+      "Edit(.mcp.json)"
+    ],
+    "allow": [
+      "Read(.idlergear/**)",
+      "Read(.claude/**)",
+      "Bash(idlergear:*)"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+# IdlerGear (local files only)
+.idlergear/daemon.sock
+.idlergear/daemon.pid
+.idlergear/runs/
+
+# Claude Code local settings
+.claude/settings.local.json
+CLAUDE.local.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
