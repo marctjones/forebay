@@ -1,0 +1,116 @@
+[
+  {
+    "worker": "typescript",
+    "url": "https://typescript-viability-test.marc-t-jones.workers.dev",
+    "health": {
+      "count": 100,
+      "cold_start_ms": 195.17,
+      "p50_ms": 65.49,
+      "p95_ms": 142.3,
+      "p99_ms": 146.0,
+      "avg_ms": 73.04,
+      "min_ms": 45.48,
+      "max_ms": 153.69
+    },
+    "kv_write": {
+      "count": 50,
+      "avg_ms": 287.26,
+      "p50_ms": 269.3,
+      "p95_ms": 383.83,
+      "min_ms": 197.9,
+      "max_ms": 484.54
+    },
+    "kv_read": {
+      "count": 50,
+      "avg_ms": 76.32,
+      "p50_ms": 71.64,
+      "p95_ms": 125.81,
+      "min_ms": 53.18,
+      "max_ms": 150.73
+    },
+    "queue_ops": {
+      "push": {
+        "count": 25,
+        "avg_ms": 285.18,
+        "p95_ms": 358.21
+      },
+      "pull": {
+        "count": 25,
+        "avg_ms": 298.07,
+        "p95_ms": 359.83
+      }
+    }
+  },
+  {
+    "worker": "rust",
+    "url": "https://rust-viability-test.marc-t-jones.workers.dev",
+    "health": {
+      "count": 100,
+      "cold_start_ms": 107.33,
+      "p50_ms": 62.04,
+      "p95_ms": 88.12,
+      "p99_ms": 134.26,
+      "avg_ms": 65.66,
+      "min_ms": 45.74,
+      "max_ms": 243.32
+    },
+    "kv_write": {
+      "count": 50,
+      "avg_ms": 290.6,
+      "p50_ms": 258.96,
+      "p95_ms": 388.63,
+      "min_ms": 217.26,
+      "max_ms": 462.05
+    },
+    "kv_read": {
+      "count": 50,
+      "avg_ms": 71.57,
+      "p50_ms": 66.24,
+      "p95_ms": 113.12,
+      "min_ms": 50.91,
+      "max_ms": 137.38
+    },
+    "queue_ops": {
+      "push": {
+        "count": 25,
+        "avg_ms": 278.82,
+        "p95_ms": 360.05
+      },
+      "pull": {
+        "count": 22,
+        "avg_ms": 284.4,
+        "p95_ms": 360.23
+      }
+    }
+  },
+  {
+    "worker": "python",
+    "url": "https://python-viability-test.marc-t-jones.workers.dev",
+    "health": {
+      "count": 100,
+      "cold_start_ms": 824.03,
+      "p50_ms": 63.04,
+      "p95_ms": 1488.69,
+      "p99_ms": 1618.14,
+      "avg_ms": 310.48,
+      "min_ms": 43.44,
+      "max_ms": 1695.94
+    },
+    "kv_write": null,
+    "kv_read": {
+      "count": 50,
+      "avg_ms": 129.98,
+      "p50_ms": 76.3,
+      "p95_ms": 260.97,
+      "min_ms": 49.08,
+      "max_ms": 1576.52
+    },
+    "queue_ops": {
+      "pull": {
+        "count": 6,
+        "avg_ms": 484.5,
+        "p95_ms": 971.43
+      }
+    }
+  }
+]

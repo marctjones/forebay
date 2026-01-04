@@ -45,3 +45,21 @@ The IdlerGear MCP server provides direct tool access. Use tools like:
 
 Do NOT modify files in `.idlergear/` directly. Use idlergear commands instead.
 The `.claude/` directory contains Claude Code settings - avoid modifying these too.
+
+## IdlerGear Usage
+
+**ALWAYS run at session start:**
+```bash
+idlergear context
+```
+
+**FORBIDDEN files:** `TODO.md`, `NOTES.md`, `SESSION_*.md`, `SCRATCH.md`
+**FORBIDDEN comments:** `// TODO:`, `# FIXME:`, `/* HACK: */`
+
+**Use instead:**
+- `idlergear task create "..."` - Create actionable tasks
+- `idlergear note create "..."` - Capture quick thoughts
+- `idlergear explore create "..."` - Research questions
+- `idlergear vision show` - Check project goals
+
+See AGENTS.md for full command reference.

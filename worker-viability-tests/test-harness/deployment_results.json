@@ -1,0 +1,26 @@
+[
+  {
+    "worker": "typescript",
+    "build_time_s": 4.07,
+    "bundle_size": "61.88 KiB (gzip: 15.12 KiB)",
+    "success": true,
+    "url": "https://typescript-viability-test.marc-t-jones.workers.dev",
+    "error": null
+  },
+  {
+    "worker": "rust",
+    "build_time_s": 24.51,
+    "bundle_size": "574.86 KiB (gzip: 231.91 KiB)",
+    "success": true,
+    "url": "https://rust-viability-test.marc-t-jones.workers.dev",
+    "error": null
+  },
+  {
+    "worker": "python",
+    "build_time_s": 4.53,
+    "bundle_size": "6.37 KiB (gzip: 1.15 KiB)",
+    "success": true,
+    "url": "https://python-viability-test.marc-t-jones.workers.dev",
+    "error": null
+  }
+]

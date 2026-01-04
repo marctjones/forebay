@@ -1,8 +1,12 @@
-# IdlerGear configuration
-
 [project]
 name = "forebay"
 
 [github]
-# repo = "owner/repo"
-# token = ""  # Or use GITHUB_TOKEN env var
+
+[backends]
+task = "github"
+note = "github"
+reference = "github"
+plan = "github"
+vision = "github"
+explore = "github"

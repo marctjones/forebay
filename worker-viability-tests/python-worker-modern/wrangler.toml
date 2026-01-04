@@ -1,6 +1,7 @@
-name = "typescript-viability-test"
-main = "src/index.ts"
+name = "python-modern-viability-test"
+main = "src/worker.py"
 compatibility_date = "2024-01-01"
+compatibility_flags = ["python_workers"]
 
 [[kv_namespaces]]
 binding = "VIABILITY_KV"
