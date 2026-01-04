@@ -1,0 +1,579 @@
+openapi: 3.0.0
+info:
+  title: Forebay Queue API
+  version: 1.0.0
+  description: |
+    REST API for Forebay message queue system - a cross-platform message transport
+    abstraction with FIFO queues, Google OAuth authentication, and JSON payloads.
+
+    ## Authentication
+    All endpoints except `/health` and `/auth/login` require authentication via Bearer token.
+    Include the session token in the Authorization header:
+    ```
+    Authorization: Bearer <session-token>
+    ```
+  contact:
+    name: Forebay API Support
+    url: https://github.com/yourusername/forebay
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://forebay-worker.{account}.workers.dev
+    description: Production Cloudflare Worker
+    variables:
+      account:
+        default: your-account
+        description: Your Cloudflare account name
+  - url: http://localhost:8787
+    description: Local development server
+
+tags:
+  - name: health
+    description: Service health and status
+  - name: auth
+    description: Authentication and session management
+  - name: queues
+    description: Queue operations (push, pull, stats, delete, list)
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns service health status. Does not require authentication.
+      operationId: getHealth
+      tags:
+        - health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: integer
+                    format: int64
+                    example: 1609459200000
+
+  /auth/login:
+    post:
+      summary: Authenticate with Google OAuth
+      description: |
+        Verify Google ID token and create a new session. Returns a session token
+        valid for 30 days.
+      operationId: login
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid token or unauthorized email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/whoami:
+    get:
+      summary: Get current user information
+      description: Returns information about the currently authenticated user.
+      operationId: whoami
+      tags:
+        - auth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User information retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhoamiResponse'
+        '401':
+          description: Invalid or expired session token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: End current session
+      description: Invalidate the current session token and log out.
+      operationId: logout
+      tags:
+        - auth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '401':
+          description: Invalid or expired session token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /queues/{queue}/push:
+    post:
+      summary: Push message to queue
+      description: |
+        Add a message to the end of the specified queue. Messages are stored in FIFO order.
+        The payload must be valid JSON.
+      operationId: pushMessage
+      tags:
+        - queues
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: queue
+          in: path
+          required: true
+          description: Queue name (max 256 characters, alphanumeric, slashes, hyphens, underscores)
+          schema:
+            type: string
+            maxLength: 256
+            pattern: '^[a-zA-Z0-9/_-]+$'
+            example: work/tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushRequest'
+      responses:
+        '200':
+          description: Message pushed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushResponse'
+        '400':
+          description: Invalid queue name or request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired session token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /queues/{queue}/pull:
+    post:
+      summary: Pull message from queue
+      description: |
+        Retrieve and remove the first message from the specified queue (FIFO).
+        Returns 404 if queue is empty.
+      operationId: pullMessage
+      tags:
+        - queues
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: queue
+          in: path
+          required: true
+          description: Queue name
+          schema:
+            type: string
+            example: work/tasks
+      responses:
+        '200':
+          description: Message pulled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullResponse'
+        '400':
+          description: Invalid queue name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired session token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Queue not found or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /queues/{queue}/stats:
+    get:
+      summary: Get queue statistics
+      description: Returns statistics about the specified queue (size, total pushed, total pulled).
+      operationId: getQueueStats
+      tags:
+        - queues
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: queue
+          in: path
+          required: true
+          description: Queue name
+          schema:
+            type: string
+            example: work/tasks
+      responses:
+        '200':
+          description: Queue statistics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+        '400':
+          description: Invalid queue name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired session token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Queue not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /queues/{queue}:
+    delete:
+      summary: Delete queue
+      description: Delete the specified queue and all its messages. This operation cannot be undone.
+      operationId: deleteQueue
+      tags:
+        - queues
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: queue
+          in: path
+          required: true
+          description: Queue name
+          schema:
+            type: string
+            example: work/tasks
+      responses:
+        '200':
+          description: Queue deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResponse'
+        '400':
+          description: Invalid queue name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired session token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Queue not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /queues:
+    get:
+      summary: List all queues
+      description: Returns a list of all queues owned by the authenticated user.
+      operationId: listQueues
+      tags:
+        - queues
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Queues listed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListQueuesResponse'
+        '401':
+          description: Invalid or expired session token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: UUID
+      description: Session token obtained from /auth/login
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - id_token
+      properties:
+        id_token:
+          type: string
+          description: Google ID token from OAuth flow
+          example: eyJhbGciOiJSUzI1NiIsImtpZCI6IjFlOWdkazcifQ...
+
+    LoginResponse:
+      type: object
+      required:
+        - session_token
+        - email
+        - expires_at
+      properties:
+        session_token:
+          type: string
+          format: uuid
+          description: Session token for subsequent requests
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: user@example.com
+        expires_at:
+          type: integer
+          format: int64
+          description: Unix timestamp (milliseconds) when session expires
+          example: 1612137600000
+
+    WhoamiResponse:
+      type: object
+      required:
+        - email
+        - created_at
+        - expires_at
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: user@example.com
+        created_at:
+          type: integer
+          format: int64
+          description: Unix timestamp (milliseconds) when session was created
+          example: 1609459200000
+        expires_at:
+          type: integer
+          format: int64
+          description: Unix timestamp (milliseconds) when session expires
+          example: 1612137600000
+
+    LogoutResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: Logged out successfully
+
+    PushRequest:
+      type: object
+      required:
+        - payload
+      properties:
+        payload:
+          description: JSON payload to push to queue (any valid JSON)
+          oneOf:
+            - type: object
+            - type: array
+            - type: string
+            - type: number
+            - type: boolean
+          example:
+            task: process_data
+            priority: high
+
+    PushResponse:
+      type: object
+      required:
+        - id
+        - queue_name
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique ID assigned to the message
+          example: 550e8400-e29b-41d4-a716-446655440000
+        queue_name:
+          type: string
+          description: Name of the queue
+          example: work/tasks
+
+    PullResponse:
+      type: object
+      required:
+        - id
+        - payload
+        - pushed_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique ID of the message
+          example: 550e8400-e29b-41d4-a716-446655440000
+        payload:
+          description: JSON payload that was pushed
+          oneOf:
+            - type: object
+            - type: array
+            - type: string
+            - type: number
+            - type: boolean
+          example:
+            task: process_data
+            priority: high
+        pushed_at:
+          type: integer
+          format: int64
+          description: Unix timestamp (milliseconds) when message was pushed
+          example: 1609459200000
+
+    StatsResponse:
+      type: object
+      required:
+        - queue_name
+        - size
+        - total_pushed
+        - total_pulled
+      properties:
+        queue_name:
+          type: string
+          description: Name of the queue
+          example: work/tasks
+        size:
+          type: integer
+          description: Current number of messages in queue
+          example: 42
+        total_pushed:
+          type: integer
+          format: int64
+          description: Total number of messages ever pushed to queue
+          example: 1000
+        total_pulled:
+          type: integer
+          format: int64
+          description: Total number of messages ever pulled from queue
+          example: 958
+
+    DeleteResponse:
+      type: object
+      required:
+        - queue_name
+        - message
+      properties:
+        queue_name:
+          type: string
+          description: Name of the deleted queue
+          example: work/tasks
+        message:
+          type: string
+          example: Queue deleted successfully
+
+    ListQueuesResponse:
+      type: object
+      required:
+        - queues
+      properties:
+        queues:
+          type: array
+          description: List of all queues
+          items:
+            $ref: '#/components/schemas/QueueInfo'
+
+    QueueInfo:
+      type: object
+      required:
+        - name
+        - size
+      properties:
+        name:
+          type: string
+          description: Queue name
+          example: work/tasks
+        size:
+          type: integer
+          description: Current number of messages in queue
+          example: 42
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+
+    ErrorDetail:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+          enum:
+            - UNAUTHORIZED
+            - BAD_REQUEST
+            - NOT_FOUND
+            - INTERNAL_ERROR
+          example: UNAUTHORIZED
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid or expired session token
+        details:
+          type: string
+          description: Additional error details (optional)
+          example: Session token not found in KV store
