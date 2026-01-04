@@ -1,7 +1,7 @@
 ---
 id: 12
 title: Build comparison report generator
-state: open
+state: closed
 created: '2026-01-04T06:21:27.577428Z'
 labels:
 - phase-0

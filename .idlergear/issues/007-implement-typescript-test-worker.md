@@ -1,7 +1,7 @@
 ---
 id: 7
 title: Implement TypeScript test Worker
-state: open
+state: closed
 created: '2026-01-04T06:21:25.467077Z'
 labels:
 - phase-0

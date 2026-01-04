@@ -1,7 +1,7 @@
 ---
 id: 10
 title: Build automated deployment script
-state: open
+state: closed
 created: '2026-01-04T06:21:26.719859Z'
 labels:
 - phase-0

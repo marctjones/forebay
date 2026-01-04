@@ -1,7 +1,7 @@
 ---
 id: 8
 title: Implement Rust test Worker
-state: open
+state: closed
 created: '2026-01-04T06:21:25.894837Z'
 labels:
 - phase-0

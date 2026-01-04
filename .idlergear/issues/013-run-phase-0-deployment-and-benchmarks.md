@@ -1,7 +1,7 @@
 ---
 id: 13
 title: Run Phase 0 deployment and benchmarks
-state: open
+state: closed
 created: '2026-01-04T06:28:43.506131Z'
 labels:
 - phase-0

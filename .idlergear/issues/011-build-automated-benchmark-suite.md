@@ -1,7 +1,7 @@
 ---
 id: 11
 title: Build automated benchmark suite
-state: open
+state: closed
 created: '2026-01-04T06:21:27.148963Z'
 labels:
 - phase-0
