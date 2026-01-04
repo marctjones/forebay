@@ -17,3 +17,11 @@ Thumbs.db
 *~
 .idea/
 .vscode/
+
+# Rust
+/worker/target/
+/worker/Cargo.lock
+
+# .NET
+**/bin/
+**/obj/
