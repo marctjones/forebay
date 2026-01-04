@@ -1,0 +1,7 @@
+name = "python-viability-test"
+main = "src/worker.py"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "VIABILITY_KV"
+id = "placeholder"  # Will be set during deployment
