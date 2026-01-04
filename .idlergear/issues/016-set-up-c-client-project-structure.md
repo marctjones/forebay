@@ -1,7 +1,7 @@
 ---
 id: 16
 title: Set up C# client project structure
-state: open
+state: closed
 created: '2026-01-04T08:32:48.980633Z'
 labels:
 - phase-1

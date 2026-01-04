@@ -1,7 +1,7 @@
 ---
 id: 15
 title: Set up Rust Worker project structure
-state: open
+state: closed
 created: '2026-01-04T08:32:48.694013Z'
 labels:
 - phase-1

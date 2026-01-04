@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "client", "client", "{577CB67B-B34F-4337-A4B5-A082069E8340}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forebay.Core", "client\Forebay.Core\Forebay.Core.csproj", "{F7CE2F11-696C-41E6-802D-D598073B2456}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forebay.Cli", "client\Forebay.Cli\Forebay.Cli.csproj", "{9C169174-A0CA-428E-8DE9-910A54BEAC0F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Forebay.Tests", "client\Forebay.Tests\Forebay.Tests.csproj", "{850B510B-C1FD-45E8-8966-A9D43BA6E2AD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7CE2F11-696C-41E6-802D-D598073B2456}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7CE2F11-696C-41E6-802D-D598073B2456}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7CE2F11-696C-41E6-802D-D598073B2456}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7CE2F11-696C-41E6-802D-D598073B2456}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C169174-A0CA-428E-8DE9-910A54BEAC0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C169174-A0CA-428E-8DE9-910A54BEAC0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C169174-A0CA-428E-8DE9-910A54BEAC0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C169174-A0CA-428E-8DE9-910A54BEAC0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{850B510B-C1FD-45E8-8966-A9D43BA6E2AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{850B510B-C1FD-45E8-8966-A9D43BA6E2AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{850B510B-C1FD-45E8-8966-A9D43BA6E2AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{850B510B-C1FD-45E8-8966-A9D43BA6E2AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F7CE2F11-696C-41E6-802D-D598073B2456} = {577CB67B-B34F-4337-A4B5-A082069E8340}
+		{9C169174-A0CA-428E-8DE9-910A54BEAC0F} = {577CB67B-B34F-4337-A4B5-A082069E8340}
+		{850B510B-C1FD-45E8-8966-A9D43BA6E2AD} = {577CB67B-B34F-4337-A4B5-A082069E8340}
+	EndGlobalSection
+EndGlobal

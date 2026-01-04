@@ -1,0 +1,12 @@
+/home/marc/Projects/forebay/client/Forebay.Core/bin/Debug/net9.0/Forebay.Core.deps.json
+/home/marc/Projects/forebay/client/Forebay.Core/bin/Debug/net9.0/Forebay.Core.dll
+/home/marc/Projects/forebay/client/Forebay.Core/bin/Debug/net9.0/Forebay.Core.pdb
+/home/marc/Projects/forebay/client/Forebay.Core/obj/Debug/net9.0/Forebay.Core.GeneratedMSBuildEditorConfig.editorconfig
+/home/marc/Projects/forebay/client/Forebay.Core/obj/Debug/net9.0/Forebay.Core.AssemblyInfoInputs.cache
+/home/marc/Projects/forebay/client/Forebay.Core/obj/Debug/net9.0/Forebay.Core.AssemblyInfo.cs
+/home/marc/Projects/forebay/client/Forebay.Core/obj/Debug/net9.0/Forebay.Core.csproj.CoreCompileInputs.cache
+/home/marc/Projects/forebay/client/Forebay.Core/obj/Debug/net9.0/Forebay.Core.sourcelink.json
+/home/marc/Projects/forebay/client/Forebay.Core/obj/Debug/net9.0/Forebay.Core.dll
+/home/marc/Projects/forebay/client/Forebay.Core/obj/Debug/net9.0/refint/Forebay.Core.dll
+/home/marc/Projects/forebay/client/Forebay.Core/obj/Debug/net9.0/Forebay.Core.pdb
+/home/marc/Projects/forebay/client/Forebay.Core/obj/Debug/net9.0/ref/Forebay.Core.dll
