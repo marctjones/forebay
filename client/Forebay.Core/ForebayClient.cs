@@ -89,7 +89,93 @@ public class ForebayClient
         return logoutResponse;
     }
 
+    // Queue methods
+
+    public async Task<PushResponse> PushAsync(string queueName, JsonElement payload, CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated();
+
+        var request = new PushRequest { Payload = payload };
+        var response = await _httpClient.PostAsJsonAsync($"/queues/{queueName}/push", request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowForebayApiExceptionAsync(response, cancellationToken);
+        }
+
+        return await response.Content.ReadFromJsonAsync<PushResponse>(cancellationToken)
+            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize push response");
+    }
+
+    public async Task<PullResponse> PullAsync(string queueName, CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated();
+
+        var response = await _httpClient.PostAsync($"/queues/{queueName}/pull", null, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowForebayApiExceptionAsync(response, cancellationToken);
+        }
+
+        return await response.Content.ReadFromJsonAsync<PullResponse>(cancellationToken)
+            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize pull response");
+    }
+
+    public async Task<StatsResponse> StatsAsync(string queueName, CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated();
+
+        var response = await _httpClient.GetAsync($"/queues/{queueName}/stats", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowForebayApiExceptionAsync(response, cancellationToken);
+        }
+
+        return await response.Content.ReadFromJsonAsync<StatsResponse>(cancellationToken)
+            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize stats response");
+    }
+
+    public async Task<DeleteResponse> DeleteQueueAsync(string queueName, CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated();
+
+        var response = await _httpClient.DeleteAsync($"/queues/{queueName}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowForebayApiExceptionAsync(response, cancellationToken);
+        }
+
+        return await response.Content.ReadFromJsonAsync<DeleteResponse>(cancellationToken)
+            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize delete response");
+    }
+
+    public async Task<ListQueuesResponse> ListQueuesAsync(CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated();
+
+        var response = await _httpClient.GetAsync("/queues", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowForebayApiExceptionAsync(response, cancellationToken);
+        }
+
+        return await response.Content.ReadFromJsonAsync<ListQueuesResponse>(cancellationToken)
+            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize list queues response");
+    }
+
     // Helper methods
+
+    private void EnsureAuthenticated()
+    {
+        if (string.IsNullOrEmpty(_sessionToken))
+        {
+            throw new InvalidOperationException("No session token set. Call LoginAsync first or use SetSessionToken.");
+        }
+    }
 
     private static async Task ThrowForebayApiExceptionAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Forebay.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c9188bfec3adac54f9315fb31448217f6c64754c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7bca5dc35e1138d0658081b440c2c09fea8e4c69")]
 [assembly: System.Reflection.AssemblyProductAttribute("Forebay.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Forebay.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

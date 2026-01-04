@@ -1,7 +1,7 @@
 ---
 id: 26
 title: Write unit tests for Rust Worker queue operations
-state: open
+state: closed
 created: '2026-01-04T08:57:09.900763Z'
 labels:
 - testing

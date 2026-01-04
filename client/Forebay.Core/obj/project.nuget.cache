@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "LH/h4dWrhuY=",
+  "dgSpecHash": "pTZZWvxjxSE=",
   "success": true,
   "projectFilePath": "/home/marc/Projects/forebay/client/Forebay.Core/Forebay.Core.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/home/marc/.nuget/packages/system.text.json/9.0.0/system.text.json.9.0.0.nupkg.sha512"
+  ],
   "logs": []
 }

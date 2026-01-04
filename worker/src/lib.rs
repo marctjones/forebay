@@ -28,6 +28,12 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         .post_async("/auth/logout", |req, ctx| async move {
             auth::handle_logout(req, ctx.env).await
         })
+        // Queue endpoints (all require auth)
+        .post_async("/queues/:queue/push", queue::handle_push)
+        .post_async("/queues/:queue/pull", queue::handle_pull)
+        .get_async("/queues/:queue/stats", queue::handle_stats)
+        .delete_async("/queues/:queue", queue::handle_delete)
+        .get_async("/queues", queue::handle_list)
         .run(req, env)
         .await
 }
