@@ -7,7 +7,7 @@ command = "cargo install -q worker-build && worker-build --release"
 
 [[kv_namespaces]]
 binding = "QUEUES"
-id = "PLACEHOLDER_QUEUES"
+id = "a0e9b53e3bcb4da18c13569e1b1d8262"
 
 [vars]
 # API Keys in format: "key1:email1@example.com,key2:email2@example.com"
