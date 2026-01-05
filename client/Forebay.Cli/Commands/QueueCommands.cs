@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Text.Json;
 using Forebay.Core;
 using Forebay.Core.Configuration;
@@ -39,9 +40,9 @@ public static class QueueCommands
             }
 
             var config = ConfigManager.Load();
-            if (config == null || !config.IsSessionValid())
+            if (config == null || string.IsNullOrEmpty(config.ApiKey))
             {
-                Console.Error.WriteLine("Not logged in. Run 'forebay login' first.");
+                Console.Error.WriteLine("Not logged in. Run 'forebay login <api-key>' first.");
                 context.ExitCode = 1;
                 return;
             }
@@ -59,7 +60,7 @@ public static class QueueCommands
                 }
 
                 var client = new ForebayClient(config.WorkerUrl ?? "https://forebay.workers.dev");
-                client.SetSessionToken(config.SessionToken!);
+                client.SetApiKey(config.ApiKey!);
 
                 var response = await client.PushAsync(queue, payload);
                 Console.WriteLine($"Pushed to {response.Queue} (length: {response.Length}, id: {response.ItemId})");
@@ -89,7 +90,7 @@ public static class QueueCommands
             var pretty = context.ParseResult.GetValueForOption(prettyOption);
 
             var config = ConfigManager.Load();
-            if (config == null || !config.IsSessionValid())
+            if (config == null || string.IsNullOrEmpty(config.ApiKey))
             {
                 Console.Error.WriteLine("Not logged in.");
                 context.ExitCode = 1;
@@ -99,7 +100,7 @@ public static class QueueCommands
             try
             {
                 var client = new ForebayClient(config.WorkerUrl ?? "https://forebay.workers.dev");
-                client.SetSessionToken(config.SessionToken!);
+                client.SetApiKey(config.ApiKey!);
 
                 var response = await client.PullAsync(queue);
 
@@ -128,7 +129,7 @@ public static class QueueCommands
             var queue = context.ParseResult.GetValueForArgument(queueArg);
             var config = ConfigManager.Load();
 
-            if (config == null || !config.IsSessionValid())
+            if (config == null || string.IsNullOrEmpty(config.ApiKey))
             {
                 Console.Error.WriteLine("Not logged in.");
                 context.ExitCode = 1;
@@ -138,7 +139,7 @@ public static class QueueCommands
             try
             {
                 var client = new ForebayClient(config.WorkerUrl ?? "https://forebay.workers.dev");
-                client.SetSessionToken(config.SessionToken!);
+                client.SetApiKey(config.ApiKey!);
 
                 var response = await client.StatsAsync(queue);
                 Console.WriteLine($"Queue: {response.Queue}");
@@ -162,7 +163,7 @@ public static class QueueCommands
         command.SetHandler(async (InvocationContext context) =>
         {
             var config = ConfigManager.Load();
-            if (config == null || !config.IsSessionValid())
+            if (config == null || string.IsNullOrEmpty(config.ApiKey))
             {
                 Console.Error.WriteLine("Not logged in.");
                 context.ExitCode = 1;
@@ -172,7 +173,7 @@ public static class QueueCommands
             try
             {
                 var client = new ForebayClient(config.WorkerUrl ?? "https://forebay.workers.dev");
-                client.SetSessionToken(config.SessionToken!);
+                client.SetApiKey(config.ApiKey!);
 
                 var response = await client.ListQueuesAsync();
                 if (response.Queues.Count == 0)
@@ -223,7 +224,7 @@ public static class QueueCommands
             }
 
             var config = ConfigManager.Load();
-            if (config == null || !config.IsSessionValid())
+            if (config == null || string.IsNullOrEmpty(config.ApiKey))
             {
                 Console.Error.WriteLine("Not logged in.");
                 context.ExitCode = 1;
@@ -233,7 +234,7 @@ public static class QueueCommands
             try
             {
                 var client = new ForebayClient(config.WorkerUrl ?? "https://forebay.workers.dev");
-                client.SetSessionToken(config.SessionToken!);
+                client.SetApiKey(config.ApiKey!);
 
                 var response = await client.DeleteQueueAsync(queue);
                 Console.WriteLine($"Deleted '{response.Queue}' ({response.DeletedItems} items removed)");
