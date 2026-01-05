@@ -367,9 +367,10 @@ dotnet format --verify-no-changes
 ```
 
 **Coverage:**
-- Current test coverage: 80%+
+- Current test coverage: ~60% (goal: 90%)
 - Worker: 25 unit tests
-- Client: 26 unit tests
+- Client: 37 unit tests (26 ForebayClient + 11 ConfigManager)
+- See [Comprehensive Testing Plan](.idlergear/wiki/comprehensive-testing-plan-for-90-coverage.md) for coverage roadmap
 
 ### Local Development
 
@@ -506,14 +507,70 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Project Status**: Phase 1 Complete - Production Ready
+**Project Status**: Phase 0 Complete - Core Development in Progress
 
-- ✅ 51 unit tests passing (25 Rust + 26 C#)
-- ✅ Google OAuth authentication
-- ✅ FIFO queue operations
-- ✅ Cross-platform CLI
-- ⏳ CI/CD pipeline (in progress)
+- ✅ Phase 0: Worker viability testing complete (Rust selected)
+- ✅ 62 unit tests passing (25 Rust worker + 37 C# client)
+- ✅ Google OAuth authentication implemented
+- ✅ FIFO queue operations implemented
+- ✅ Cross-platform config management
+- 🚧 CLI building (System.CommandLine API compatibility issue)
+- 🚧 90% test coverage goal (currently ~60%)
 - ⏳ Integration tests (planned)
-- ⏳ GUI applications (planned)
+- ⏳ CI/CD pipeline (planned)
+- ⏳ GUI applications (future)
+
+### Current Development Status
+
+**What Works:**
+- ✅ Rust Worker with auth, queue, KV storage
+- ✅ C# Core library with ForebayClient
+- ✅ Configuration management (TOML, cross-platform)
+- ✅ Test suite: 25 Rust + 37 C# tests passing
+
+**In Progress:**
+- 🚧 CLI commands (blocked by System.CommandLine 2.0.1 API changes)
+- 🚧 Comprehensive test coverage (targeting 90%)
+- 🚧 OAuth PKCE flow implementation
+- 🚧 GitHub Actions CI/CD setup
+
+**Next Steps:**
+See [Project Organization and Implementation Roadmap](.idlergear/wiki/project-organization-and-implementation-roadmap.md) for detailed milestones and timeline.
+
+### Development Roadmap
+
+The project is organized into 6 milestones leading to v1.0.0:
+
+1. **Core Backend Completion** (v1.0.0-alpha.1) - 2 weeks
+   - Fix CLI build issues
+   - Implement OAuth PKCE flow
+   - Add comprehensive error handling
+
+2. **Comprehensive Testing** (v1.0.0-alpha.2) - 2 weeks
+   - Achieve 90% code coverage
+   - Add integration tests
+   - Set up mock OAuth server
+
+3. **CI/CD Infrastructure** (v1.0.0-beta.1) - 1 week
+   - GitHub Actions workflows
+   - Automated testing and deployment
+
+4. **Production Hardening** (v1.0.0-rc.1) - 2 weeks
+   - Security audit
+   - Performance optimization
+   - Production monitoring
+
+5. **Documentation & Release** (v1.0.0) - 1 week
+   - Complete user documentation
+   - API reference
+   - Migration guides
+
+6. **GUI Applications** (v1.1.0) - Future
+   - Avalonia desktop app
+   - System tray integration
+
+For detailed task breakdown, dependencies, and priorities, see:
+- [Comprehensive Testing Plan](.idlergear/wiki/comprehensive-testing-plan-for-90-coverage.md)
+- [Project Organization and Implementation Roadmap](.idlergear/wiki/project-organization-and-implementation-roadmap.md)
 
 For more information, visit the [documentation](docs/) or [open an issue](https://github.com/yourusername/forebay/issues).
