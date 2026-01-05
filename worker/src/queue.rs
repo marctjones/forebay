@@ -10,6 +10,40 @@ use worker::*;
 
 const MAX_QUEUE_NAME_LENGTH: usize = 64;
 const QUEUE_PREFIX: &str = "queue:";
+const QUEUE_INDEX_KEY: &str = "queues:index";
+
+// Helper function to add queue to index
+async fn add_queue_to_index(kv: &kv::KvStore, queue_name: &str) -> Result<()> {
+    let mut queues: Vec<String> = match kv.get(QUEUE_INDEX_KEY).text().await? {
+        Some(json) => serde_json::from_str(&json).unwrap_or_else(|_| vec![]),
+        None => vec![],
+    };
+
+    // Add queue if not already in index
+    if !queues.contains(&queue_name.to_string()) {
+        queues.push(queue_name.to_string());
+        queues.sort(); // Keep sorted for consistent ordering
+        let json = serde_json::to_string(&queues).unwrap();
+        kv.put(QUEUE_INDEX_KEY, json)?.execute().await?;
+    }
+
+    Ok(())
+}
+
+// Helper function to remove queue from index
+async fn remove_queue_from_index(kv: &kv::KvStore, queue_name: &str) -> Result<()> {
+    let mut queues: Vec<String> = match kv.get(QUEUE_INDEX_KEY).text().await? {
+        Some(json) => serde_json::from_str(&json).unwrap_or_else(|_| vec![]),
+        None => vec![],
+    };
+
+    // Remove queue from index
+    queues.retain(|q| q != queue_name);
+    let json = serde_json::to_string(&queues).unwrap();
+    kv.put(QUEUE_INDEX_KEY, json)?.execute().await?;
+
+    Ok(())
+}
 
 pub async fn handle_push(mut req: Request, ctx: RouteContext<()>) -> Result<Response> {
     // Verify authentication
@@ -79,6 +113,9 @@ pub async fn handle_push(mut req: Request, ctx: RouteContext<()>) -> Result<Resp
     kv.put(&key, serde_json::to_string(&queue_data)?)?
         .execute()
         .await?;
+
+    // Add queue to index (if it's a new queue, this is idempotent)
+    add_queue_to_index(&kv, queue_name).await?;
 
     let response = PushResponse {
         success: true,
@@ -232,6 +269,9 @@ pub async fn handle_delete(req: Request, ctx: RouteContext<()>) -> Result<Respon
     // Delete queue
     kv.delete(&key).await?;
 
+    // Remove queue from index
+    remove_queue_from_index(&kv, queue_name).await?;
+
     let response = DeleteResponse {
         success: true,
         queue: queue_name.to_string(),
@@ -248,13 +288,30 @@ pub async fn handle_list(req: Request, ctx: RouteContext<()>) -> Result<Response
         Err(e) => return e,
     };
 
-    // List all queues by scanning KV keys
-    let _kv = ctx.env.kv("QUEUES")?;
+    // Get queue index
+    let kv = ctx.env.kv("QUEUES")?;
+    let queue_names: Vec<String> = match kv.get(QUEUE_INDEX_KEY).text().await? {
+        Some(json) => serde_json::from_str(&json).unwrap_or_else(|_| vec![]),
+        None => vec![],
+    };
 
-    // Note: Cloudflare Workers KV doesn't have a native list operation
-    // In production, you'd maintain a separate index of queue names
-    // For now, return empty list with a note
-    let response = ListQueuesResponse { queues: vec![] };
+    // Get stats for each queue
+    let mut queues = vec![];
+    for queue_name in queue_names {
+        let key = format!("{}{}", QUEUE_PREFIX, queue_name);
+        if let Some(json) = kv.get(&key).text().await? {
+            if let Ok(queue_data) = serde_json::from_str::<QueueData>(&json) {
+                let oldest_timestamp = queue_data.items.first().map(|item| item.timestamp);
+                queues.push(crate::models::QueueInfo {
+                    name: queue_name,
+                    length: queue_data.items.len(),
+                    oldest_timestamp,
+                });
+            }
+        }
+    }
+
+    let response = ListQueuesResponse { queues };
 
     Response::from_json(&response)
 }
