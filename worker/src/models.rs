@@ -2,34 +2,9 @@ use serde::{Deserialize, Serialize};
 
 // Authentication Models
 
-#[derive(Debug, Deserialize)]
-pub struct LoginRequest {
-    pub id_token: String,
-}
-
-#[derive(Debug, Serialize)]
-pub struct LoginResponse {
-    pub session_token: String,
-    pub email: String,
-    pub expires_at: i64,
-}
-
 #[derive(Debug, Serialize)]
 pub struct WhoamiResponse {
     pub email: String,
-    pub expires_at: i64,
-}
-
-#[derive(Debug, Serialize)]
-pub struct LogoutResponse {
-    pub success: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SessionData {
-    pub email: String,
-    pub created_at: i64,
-    pub expires_at: i64,
 }
 
 // Queue Models
@@ -109,22 +84,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_login_request_deserialization() {
-        let json = r#"{"id_token":"test-token"}"#;
-        let req: LoginRequest = serde_json::from_str(json).unwrap();
-        assert_eq!(req.id_token, "test-token");
-    }
-
-    #[test]
-    fn test_login_response_serialization() {
-        let response = LoginResponse {
-            session_token: "session-123".to_string(),
+    fn test_whoami_response_serialization() {
+        let response = WhoamiResponse {
             email: "test@example.com".to_string(),
-            expires_at: 1609459200000,
         };
 
         let json = serde_json::to_string(&response).unwrap();
-        assert!(json.contains("\"session_token\":\"session-123\""));
         assert!(json.contains("\"email\":\"test@example.com\""));
     }
 

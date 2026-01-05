@@ -1,7 +1,7 @@
 ---
 id: 46
 title: Create developer guide and contributing documentation
-state: open
+state: closed
 created: '2026-01-04T09:25:28.478079Z'
 labels:
 - documentation

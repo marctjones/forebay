@@ -1,7 +1,7 @@
 ---
 id: 47
 title: Create CHANGELOG.md and establish versioning strategy
-state: open
+state: closed
 created: '2026-01-04T09:25:28.842828Z'
 labels:
 - documentation

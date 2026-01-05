@@ -6,14 +6,11 @@ compatibility_date = "2024-01-01"
 command = "cargo install -q worker-build && worker-build --release"
 
 [[kv_namespaces]]
-binding = "QUEUE_DATA"
-id = "PLACEHOLDER_QUEUE_DATA"
-
-[[kv_namespaces]]
-binding = "SESSION_TOKENS"
-id = "PLACEHOLDER_SESSION_TOKENS"
+binding = "QUEUES"
+id = "PLACEHOLDER_QUEUES"
 
 [vars]
-# These will be set via wrangler secret or environment
-# ALLOWED_EMAILS = "user@example.com,admin@example.com"
-# GOOGLE_CLIENT_ID = "your-client-id.apps.googleusercontent.com"
+# API Keys in format: "key1:email1@example.com,key2:email2@example.com"
+# For development, set in .dev.vars file
+# For production, use: wrangler secret put API_KEYS
+API_KEYS = "dev-alice:alice@example.com,dev-bob:bob@example.com"

@@ -1,7 +1,7 @@
 ---
 id: 45
 title: Document API specification and create OpenAPI/Swagger spec
-state: open
+state: closed
 created: '2026-01-04T09:25:28.121332Z'
 labels:
 - documentation

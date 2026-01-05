@@ -18,17 +18,11 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 "timestamp": chrono::Utc::now().timestamp_millis(),
             }))
         })
-        // Authentication endpoints
-        .post_async("/auth/login", |req, ctx| async move {
-            auth::handle_login(req, ctx.env).await
-        })
+        // Authentication endpoint
         .get_async("/auth/whoami", |req, ctx| async move {
             auth::handle_whoami(req, ctx.env).await
         })
-        .post_async("/auth/logout", |req, ctx| async move {
-            auth::handle_logout(req, ctx.env).await
-        })
-        // Queue endpoints (all require auth)
+        // Queue endpoints (all require auth via API key)
         .post_async("/queues/:queue/push", queue::handle_push)
         .post_async("/queues/:queue/pull", queue::handle_pull)
         .get_async("/queues/:queue/stats", queue::handle_stats)

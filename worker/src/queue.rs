@@ -1,4 +1,4 @@
-use crate::auth::get_session;
+use crate::auth::validate_api_key;
 use crate::error::ErrorResponse;
 use crate::models::{
     DeleteResponse, ListQueuesResponse, PullResponse, PushRequest, PushResponse, QueueData,
@@ -13,8 +13,8 @@ const QUEUE_PREFIX: &str = "queue:";
 
 pub async fn handle_push(mut req: Request, ctx: RouteContext<()>) -> Result<Response> {
     // Verify authentication
-    let _session = match get_session(&req, &ctx.env).await {
-        Ok(s) => s,
+    let _email = match validate_api_key(&req, &ctx.env).await {
+        Ok(email) => email,
         Err(e) => return e,
     };
 
@@ -93,8 +93,8 @@ pub async fn handle_push(mut req: Request, ctx: RouteContext<()>) -> Result<Resp
 
 pub async fn handle_pull(req: Request, ctx: RouteContext<()>) -> Result<Response> {
     // Verify authentication
-    let _session = match get_session(&req, &ctx.env).await {
-        Ok(s) => s,
+    let _email = match validate_api_key(&req, &ctx.env).await {
+        Ok(email) => email,
         Err(e) => return e,
     };
 
@@ -149,7 +149,7 @@ pub async fn handle_pull(req: Request, ctx: RouteContext<()>) -> Result<Response
 
 pub async fn handle_stats(req: Request, ctx: RouteContext<()>) -> Result<Response> {
     // Verify authentication
-    let _session = match get_session(&req, &ctx.env).await {
+    let _email = match validate_api_key(&req, &ctx.env).await {
         Ok(s) => s,
         Err(e) => return e,
     };
@@ -204,7 +204,7 @@ pub async fn handle_stats(req: Request, ctx: RouteContext<()>) -> Result<Respons
 
 pub async fn handle_delete(req: Request, ctx: RouteContext<()>) -> Result<Response> {
     // Verify authentication
-    let _session = match get_session(&req, &ctx.env).await {
+    let _email = match validate_api_key(&req, &ctx.env).await {
         Ok(s) => s,
         Err(e) => return e,
     };
@@ -243,7 +243,7 @@ pub async fn handle_delete(req: Request, ctx: RouteContext<()>) -> Result<Respon
 
 pub async fn handle_list(req: Request, ctx: RouteContext<()>) -> Result<Response> {
     // Verify authentication
-    let _session = match get_session(&req, &ctx.env).await {
+    let _email = match validate_api_key(&req, &ctx.env).await {
         Ok(s) => s,
         Err(e) => return e,
     };
