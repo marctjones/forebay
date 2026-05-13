@@ -1,18 +1,18 @@
 # Forebay
 
-[![Tests](https://github.com/yourusername/forebay/workflows/CI/badge.svg)](https://github.com/yourusername/forebay/actions)
+[![Tests](https://github.com/marctjones/forebay/workflows/CI/badge.svg)](https://github.com/marctjones/forebay/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/yourusername/forebay/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/marctjones/forebay/releases)
 
-> A cross-platform message queue transport system for seamless data flow across machines
+> Cross-machine message queues and document storage on Cloudflare's edge
 
-Forebay is a universal message transport abstraction that lets you push messages to named queues and retrieve them later across different machines. Think of it as a forebay that buffers and delivers your messages wherever you need them.
+Forebay is a universal transport abstraction: push messages to named FIFO queues, store JSON documents under arbitrary keys, and retrieve either from any machine. A Rust Cloudflare Worker handles the backend; a .NET CLI and Avalonia/TUI reference apps consume it.
 
 ## Quick Start
 
 ```bash
-# Authenticate with Google
-forebay login
+# Authenticate with your API key (one-time setup)
+forebay login <your-api-key>
 
 # Push a message to a queue
 echo '{"task": "process_data"}' | forebay push work/tasks
@@ -20,8 +20,14 @@ echo '{"task": "process_data"}' | forebay push work/tasks
 # Pull the message on any machine
 forebay pull work/tasks
 
-# Check queue statistics
+# Store a JSON document under a named key
+forebay put config/app-settings '{"theme": "dark"}'
+forebay get config/app-settings
+forebay list-docs --prefix config
+
+# Inspect queues
 forebay stats work/tasks
+forebay list
 ```
 
 ## Table of Contents
@@ -35,6 +41,8 @@ forebay stats work/tasks
   - [Basic Usage](#basic-usage)
 - [Commands](#commands)
 - [Queue Operations](#queue-operations)
+- [Document Storage](#document-storage)
+- [Reference Apps](#reference-apps)
 - [Advanced Usage](#advanced-usage)
 - [Architecture](#architecture)
 - [Development](#development)
@@ -44,13 +52,14 @@ forebay stats work/tasks
 
 ## Features
 
-- **Cross-platform CLI**: Works on Linux, Windows, and macOS
-- **Simple authentication**: Google OAuth with 30-day sessions
-- **FIFO queues**: First-In-First-Out message ordering
-- **JSON payloads**: Structured data support
-- **High performance**: Rust-powered Cloudflare Worker backend (107ms cold start, 88ms P95 latency)
-- **Secure**: OAuth 2.0 authentication with email allowlist
-- **Scriptable**: Easy integration with shell scripts and CI/CD pipelines
+- **Cross-platform CLI**: Linux, Windows, macOS (.NET 9)
+- **API-key authentication**: Static keys mapped per-user via the worker's `API_KEYS` env var — no OAuth dance, no session expiry
+- **FIFO queues**: First-In-First-Out message ordering with per-queue stats
+- **Document storage**: PUT/GET/DELETE/list JSON documents by key, with prefix filtering
+- **JSON payloads**: Structured data for both messages and documents
+- **High performance**: Rust-powered Cloudflare Worker backend (~107ms cold start, ~88ms P95 latency)
+- **Reference apps**: Avalonia desktop and terminal-UI task managers showing end-to-end use of queues + storage
+- **Scriptable**: Drop-in for shell scripts and CI/CD pipelines
 
 ## Installation
 
@@ -60,27 +69,27 @@ Download the latest release for your platform:
 
 **Linux (x64)**
 ```bash
-wget https://github.com/yourusername/forebay/releases/latest/download/forebay-linux-x64
+wget https://github.com/marctjones/forebay/releases/latest/download/forebay-linux-x64
 chmod +x forebay-linux-x64
 sudo mv forebay-linux-x64 /usr/local/bin/forebay
 ```
 
 **Windows (x64)**
 ```powershell
-# Download from https://github.com/yourusername/forebay/releases/latest/download/forebay-win-x64.exe
+# Download from https://github.com/marctjones/forebay/releases/latest/download/forebay-win-x64.exe
 # Add to PATH or run directly
 ```
 
 **macOS (x64)**
 ```bash
-wget https://github.com/yourusername/forebay/releases/latest/download/forebay-macos-x64
+wget https://github.com/marctjones/forebay/releases/latest/download/forebay-macos-x64
 chmod +x forebay-macos-x64
 sudo mv forebay-macos-x64 /usr/local/bin/forebay
 ```
 
 **macOS (ARM64)**
 ```bash
-wget https://github.com/yourusername/forebay/releases/latest/download/forebay-macos-arm64
+wget https://github.com/marctjones/forebay/releases/latest/download/forebay-macos-arm64
 chmod +x forebay-macos-arm64
 sudo mv forebay-macos-arm64 /usr/local/bin/forebay
 ```
@@ -95,7 +104,7 @@ sudo mv forebay-macos-arm64 /usr/local/bin/forebay
 **Clone and Build:**
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/forebay.git
+git clone https://github.com/marctjones/forebay.git
 cd forebay
 
 # Build the CLI
@@ -119,23 +128,22 @@ dotnet run --project Forebay.Cli -- --help
 
 ### Authentication
 
-Forebay uses Google OAuth for authentication. On your first use:
+Forebay uses static API keys. The worker validates the `Authorization: Bearer <key>` header against the `API_KEYS` environment variable (a comma-separated `key:email` list — see [Self-Hosting](#self-hosting)).
+
+To set up the client:
 
 ```bash
-forebay login
+forebay login <your-api-key>
 ```
 
-This will:
-1. Open your browser for Google authentication
-2. Save a session token to `~/.config/forebay/config.json` (Linux/macOS) or `%APPDATA%\forebay\config.json` (Windows)
-3. Keep you logged in for 30 days
+This saves the key to `~/.config/forebay/config.toml` (Linux/macOS) or `%APPDATA%\forebay\config.toml` (Windows). The key is sent on every request and used by the worker to scope your queues and documents to your email.
 
-**Check who you're logged in as:**
+**Check who you're authenticated as:**
 ```bash
 forebay whoami
 ```
 
-**Log out:**
+**Clear the saved key:**
 ```bash
 forebay logout
 ```
@@ -180,9 +188,9 @@ forebay delete work/tasks
 
 | Command | Description |
 |---------|-------------|
-| `forebay login` | Authenticate with Google OAuth |
-| `forebay whoami` | Show current user information |
-| `forebay logout` | End current session |
+| `forebay login <api-key>` | Save the API key to the config file |
+| `forebay whoami` | Show the email associated with the saved key |
+| `forebay logout` | Clear the saved API key |
 
 ### Queue Commands
 
@@ -193,6 +201,15 @@ forebay delete work/tasks
 | `forebay stats <queue>` | Show queue statistics (size, total pushed/pulled) |
 | `forebay list` | List all queues |
 | `forebay delete <queue>` | Delete a queue and all its messages |
+
+### Document Storage Commands
+
+| Command | Description |
+|---------|-------------|
+| `forebay put <key> <json>` | Store a JSON document under the given key (creates or replaces) |
+| `forebay get <key> [--pretty]` | Retrieve the document stored at the given key |
+| `forebay delete-doc <key>` | Delete a stored document |
+| `forebay list-docs [--prefix <p>]` | List documents, optionally filtered by key prefix |
 
 ## Queue Operations
 
@@ -246,6 +263,58 @@ forebay push queue '{
 }'
 ```
 
+## Document Storage
+
+Forebay also exposes a small key/value document store alongside the queue API. Use it for persistent state — task lists, configuration, notes — anywhere you'd reach for a tiny shared database.
+
+```bash
+# Store a JSON document
+forebay put tasks/todo-list '{"tasks":[{"id":1,"text":"Review PRs","done":false}]}'
+
+# Retrieve it
+forebay get tasks/todo-list --pretty
+
+# List all documents
+forebay list-docs
+
+# Filter by key prefix
+forebay list-docs --prefix tasks
+
+# Delete one
+forebay delete-doc tasks/todo-list
+```
+
+Documents are stored in Cloudflare KV under the authenticated user's namespace. Keys can contain slashes for hierarchical grouping (`config/app-settings`, `notes/2026/standup`), and `list-docs --prefix` is the discovery mechanism. The value must be valid JSON; size limits mirror Cloudflare KV's per-value cap.
+
+Endpoints (for direct API use):
+
+| Method | Path | Action |
+|---|---|---|
+| `PUT` | `/store/<key>` | Create or replace document |
+| `GET` | `/store/<key>` | Read document |
+| `DELETE` | `/store/<key>` | Delete document |
+| `GET` | `/store` | List documents (supports `?prefix=`) |
+
+## Reference Apps
+
+`apps/` contains two reference applications that exercise the queue + storage API end-to-end. They share state via the worker, so the same task list shows up in both:
+
+- **`Forebay.TaskManager.Avalonia`** — cross-platform desktop GUI (Linux/Windows/macOS) built with Avalonia
+- **`Forebay.TaskManager.Tui`** — terminal-UI version for SSH/headless workflows
+
+Run either against the same worker and they'll see each other's writes:
+
+```bash
+# Desktop GUI
+dotnet run --project apps/Forebay.TaskManager.Avalonia
+
+# Terminal UI
+dotnet run --project apps/Forebay.TaskManager.Tui
+
+# Verify both see the same shared state
+./apps/test-shared-storage.sh
+```
+
 ## Advanced Usage
 
 ### Piping Data Between Queues
@@ -296,54 +365,47 @@ done
 ## Architecture
 
 ```
-┌─────────────┐         HTTPS          ┌──────────────────┐
-│             │  ◄──────────────────►  │                  │
-│  Forebay    │      REST API          │  Cloudflare      │
-│  CLI (C#)   │                        │  Worker (Rust)   │
-│             │   Authorization:       │                  │
-└─────────────┘   Bearer <token>       └──────────────────┘
-                                                │
-      Local                                     │
-   ~/.config/forebay/                           ▼
-   config.json                         ┌──────────────────┐
-   (session token)                     │  Cloudflare KV   │
-                                       │  - Sessions      │
-                                       │  - Queues        │
-                                       └──────────────────┘
+┌──────────────────┐                            ┌─────────────────────┐
+│  CLI (.NET 9)    │           HTTPS            │                     │
+│  TaskManager.    │  ────────────────────────► │  Cloudflare Worker  │
+│    Avalonia      │   Authorization:           │  (Rust + worker-rs) │
+│  TaskManager.Tui │   Bearer <api-key>         │                     │
+└──────────────────┘                            └──────────┬──────────┘
+        │                                                  │
+        ▼                                                  ▼
+~/.config/forebay/                                 ┌──────────────────┐
+config.toml                                        │  Cloudflare KV   │
+(API key)                                          │  - QUEUES        │
+                                                   │  - documents     │
+                                                   └──────────────────┘
 ```
+
+The worker is a single Rust crate (`worker/`) compiled to WASM and deployed via Wrangler. Each request is authenticated by validating the bearer token against the `API_KEYS` env var (a `key:email` map), then routed to either the queue module (`/queues/...`) or the storage module (`/store/...`). All persistence is Cloudflare KV.
 
 ### Technology Stack
 
-- **Backend**: Rust-powered Cloudflare Worker
-  - Worker-rs framework
-  - KV storage for sessions and queues
-  - Google OAuth JWT verification
-  - 25 unit tests
+- **Backend**: Rust Cloudflare Worker (worker-rs)
+  - KV storage for queues and documents
+  - Static API-key auth (no JWT, no OAuth)
+  - Routes: `/queues/...`, `/store/...`, `/whoami`
 
-- **Client**: C# .NET 9.0
-  - System.CommandLine for CLI
-  - HttpClient for REST API
-  - Cross-platform (Linux, Windows, macOS)
-  - 26 unit tests
+- **Client**: .NET 9.0
+  - `Forebay.Cli` — System.CommandLine
+  - `Forebay.Core` — shared `ForebayClient` HTTP wrapper, Tomlyn-based config
+  - `Forebay.Tests` — unit tests
 
-- **Performance**:
+- **Reference apps** (`apps/`):
+  - `Forebay.TaskManager.Avalonia` — desktop GUI (MVVM, Avalonia 11)
+  - `Forebay.TaskManager.Tui` — terminal UI
+
+- **Performance** (Phase 0 benchmark, may have shifted since):
   - Worker cold start: ~107ms
   - Worker warm latency: ~88ms P95
   - KV read/write: <50ms P95
 
 ### Why This Stack?
 
-Forebay went through comprehensive Phase 0 viability testing across TypeScript, Rust, and Python workers. Rust was selected for:
-- Best performance (107ms cold start vs 195ms TypeScript, 824ms Python)
-- Lowest latency (88ms P95 vs 142ms TypeScript, 1489ms Python)
-- Type safety and reliability
-- Excellent WASM support
-
-C# was selected for the client for:
-- Excellent cross-platform CLI support
-- Future GUI development with Avalonia
-- Strong typing and developer experience
-- Easy distribution as single binary
+Forebay went through Phase 0 viability testing across TypeScript, Rust, and Python workers. Rust was selected for performance (107ms cold start vs 195ms TypeScript, 824ms Python), latency (88ms P95 vs 142ms / 1489ms), and WASM support. .NET was selected for the client to get a single cross-platform CLI plus Avalonia desktop binaries from the same codebase.
 
 See `worker-viability-tests/RESULTS_FINAL.md` for detailed benchmarks.
 
@@ -406,12 +468,13 @@ You can deploy your own Forebay Worker to Cloudflare:
 
 Sign up at [cloudflare.com](https://www.cloudflare.com/) and install [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/).
 
-### 2. Create KV Namespaces
+### 2. Create KV Namespace
 
 ```bash
-wrangler kv:namespace create forebay-sessions
 wrangler kv:namespace create forebay-queues
 ```
+
+(A single namespace holds both queues and documents.)
 
 ### 3. Configure wrangler.toml
 
@@ -421,17 +484,16 @@ main = "src/lib.rs"
 compatibility_date = "2024-01-01"
 
 [[kv_namespaces]]
-binding = "SESSIONS"
-id = "your-sessions-namespace-id"
-
-[[kv_namespaces]]
 binding = "QUEUES"
 id = "your-queues-namespace-id"
 
 [vars]
-GOOGLE_CLIENT_ID = "your-google-oauth-client-id"
-ALLOWED_EMAILS = "user1@example.com,user2@example.com"
+# Comma-separated key:email pairs. Each API key maps to a user
+# email for per-user queue/document isolation.
+API_KEYS = "key1:alice@example.com,key2:bob@example.com"
 ```
+
+Generate strong keys however you like (`openssl rand -hex 32`, `uuidgen`, etc.). Treat the `API_KEYS` value as a secret — set it via `wrangler secret put API_KEYS` in production rather than committing it.
 
 ### 4. Deploy
 
@@ -444,19 +506,20 @@ wrangler deploy
 
 ```bash
 forebay config set worker-url https://your-worker.workers.dev
+forebay login <your-api-key>
 ```
 
 ## Troubleshooting
 
 ### Authentication Issues
 
-**Problem**: `forebay login` fails or hangs
+**Problem**: `Unauthorized` / `Invalid API key` responses
 
 **Solutions**:
-- Ensure you have a stable internet connection
-- Check that your browser isn't blocking popups
-- Try logging out and back in: `forebay logout && forebay login`
-- Clear config file: `rm ~/.config/forebay/config.json`
+- Verify the key is present in the worker's `API_KEYS` env var
+- Re-run `forebay login <api-key>` to overwrite the saved value
+- Inspect the saved config: `cat ~/.config/forebay/config.toml`
+- Clear it and start over: `rm ~/.config/forebay/config.toml && forebay login <api-key>`
 
 ### Network Errors
 
@@ -485,13 +548,6 @@ forebay config set worker-url https://your-worker.workers.dev
 - Use single quotes around JSON in bash: `forebay push queue '{"key": "value"}'`
 - Validate JSON with `jq`: `echo '{"key": "value"}' | jq .`
 
-### Session Expired
-
-**Problem**: `Unauthorized` or `Invalid session token` errors
-
-**Solutions**:
-- Sessions expire after 30 days
-- Re-authenticate: `forebay login`
 
 ## License
 
@@ -507,70 +563,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Project Status**: Phase 0 Complete - Core Development in Progress
+**Project Status**: Phase 1 in progress — queues + storage shipped, reference apps in early state
 
 - ✅ Phase 0: Worker viability testing complete (Rust selected)
-- ✅ 62 unit tests passing (25 Rust worker + 37 C# client)
-- ✅ Google OAuth authentication implemented
-- ✅ FIFO queue operations implemented
-- ✅ Cross-platform config management
-- 🚧 CLI building (System.CommandLine API compatibility issue)
-- 🚧 90% test coverage goal (currently ~60%)
-- ⏳ Integration tests (planned)
-- ⏳ CI/CD pipeline (planned)
-- ⏳ GUI applications (future)
-
-### Current Development Status
-
-**What Works:**
-- ✅ Rust Worker with auth, queue, KV storage
-- ✅ C# Core library with ForebayClient
-- ✅ Configuration management (TOML, cross-platform)
-- ✅ Test suite: 25 Rust + 37 C# tests passing
-
-**In Progress:**
-- 🚧 CLI commands (blocked by System.CommandLine 2.0.1 API changes)
-- 🚧 Comprehensive test coverage (targeting 90%)
-- 🚧 OAuth PKCE flow implementation
-- 🚧 GitHub Actions CI/CD setup
-
-**Next Steps:**
-See [Project Organization and Implementation Roadmap](.idlergear/wiki/project-organization-and-implementation-roadmap.md) for detailed milestones and timeline.
-
-### Development Roadmap
-
-The project is organized into 6 milestones leading to v1.0.0:
-
-1. **Core Backend Completion** (v1.0.0-alpha.1) - 2 weeks
-   - Fix CLI build issues
-   - Implement OAuth PKCE flow
-   - Add comprehensive error handling
-
-2. **Comprehensive Testing** (v1.0.0-alpha.2) - 2 weeks
-   - Achieve 90% code coverage
-   - Add integration tests
-   - Set up mock OAuth server
-
-3. **CI/CD Infrastructure** (v1.0.0-beta.1) - 1 week
-   - GitHub Actions workflows
-   - Automated testing and deployment
-
-4. **Production Hardening** (v1.0.0-rc.1) - 2 weeks
-   - Security audit
-   - Performance optimization
-   - Production monitoring
-
-5. **Documentation & Release** (v1.0.0) - 1 week
-   - Complete user documentation
-   - API reference
-   - Migration guides
-
-6. **GUI Applications** (v1.1.0) - Future
-   - Avalonia desktop app
-   - System tray integration
+- ✅ Rust worker with FIFO queues, document storage, KV-indexed queue listing
+- ✅ Static API-key authentication (Google OAuth scaffolding removed)
+- ✅ .NET 9 client: `Forebay.Cli` (queue + storage commands) and `Forebay.Core` (HTTP wrapper, TOML config)
+- ✅ Reference apps: `apps/Forebay.TaskManager.Avalonia` (desktop GUI) and `apps/Forebay.TaskManager.Tui` (terminal UI)
+- ✅ Interactive demo script (`demo.sh`) covering all CLI features
+- 🚧 90% test-coverage push
+- ⏳ Integration tests and CI/CD pipeline
+- ⏳ Binary release builds and signed installers
 
 For detailed task breakdown, dependencies, and priorities, see:
 - [Comprehensive Testing Plan](.idlergear/wiki/comprehensive-testing-plan-for-90-coverage.md)
 - [Project Organization and Implementation Roadmap](.idlergear/wiki/project-organization-and-implementation-roadmap.md)
 
-For more information, visit the [documentation](docs/) or [open an issue](https://github.com/yourusername/forebay/issues).
+For more information, visit the [documentation](docs/) or [open an issue](https://github.com/marctjones/forebay/issues).
