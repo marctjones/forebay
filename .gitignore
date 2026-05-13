@@ -18,18 +18,39 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Rust
-/worker/target/
+# Rust (any workspace)
+**/target/
 /worker/Cargo.lock
 
-# .NET
+# .NET (any workspace)
 **/bin/
 **/obj/
+*.user
+*.suo
+.vs/
 
-# Node (worker scaffolding, Wrangler runtime)
+# Node / Cloudflare Workers (any workspace)
 node_modules/
-worker/.wrangler/
+**/.wrangler/
+dist/
+.next/
+
+# Python (any workspace)
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # Local logs
 *.log
 daemon.log
+
+# Secrets / account info
+.env
+.env.local
+*.pem
+*.key
+**/wrangler-account.json
