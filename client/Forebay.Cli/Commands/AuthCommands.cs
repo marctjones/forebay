@@ -9,48 +9,47 @@ public static class AuthCommands
 {
     public static Command CreateLoginCommand()
     {
-        var command = new Command("login", "Authenticate with Google OAuth");
+        var command = new Command("login", "Set API key for authentication");
+        var keyArg = new Argument<string>("api-key", "Your Forebay API key");
+        command.Add(keyArg);
 
-        command.SetHandler(() =>
+        command.SetHandler((string apiKey) =>
         {
-            Console.WriteLine("Login functionality coming soon!");
-            Console.WriteLine("This will:");
-            Console.WriteLine("1. Start a local HTTP server on localhost:8080");
-            Console.WriteLine("2. Open your browser to Google OAuth");
-            Console.WriteLine("3. Handle the callback and exchange for session token");
-            Console.WriteLine("4. Save the session token to ~/.config/forebay/config.toml");
-        });
+            try
+            {
+                var config = ConfigManager.Load() ?? new ForebayConfig();
+                config.ApiKey = apiKey;
+                ConfigManager.Save(config);
+
+                Console.WriteLine("API key saved successfully.");
+                Console.WriteLine("You can now use Forebay commands.");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error saving API key: {ex.Message}");
+            }
+        }, keyArg);
 
         return command;
     }
 
     public static Command CreateLogoutCommand()
     {
-        var command = new Command("logout", "Log out and clear session");
+        var command = new Command("logout", "Clear API key");
 
-        command.SetHandler(async () =>
+        command.SetHandler(() =>
         {
             try
             {
                 var config = ConfigManager.Load();
-                if (config == null || string.IsNullOrEmpty(config.SessionToken))
+                if (config == null || string.IsNullOrEmpty(config.ApiKey))
                 {
-                    Console.WriteLine("Not logged in.");
+                    Console.WriteLine("No API key configured.");
                     return;
                 }
 
-                var workerUrl = config.WorkerUrl ?? "https://forebay.workers.dev";
-                var client = new ForebayClient(workerUrl);
-                client.SetSessionToken(config.SessionToken);
-
-                await client.LogoutAsync();
                 ConfigManager.Delete();
-
-                Console.WriteLine("Logged out successfully.");
-            }
-            catch (ForebayApiException ex)
-            {
-                Console.Error.WriteLine($"API Error: {ex.Message}");
+                Console.WriteLine("API key cleared successfully.");
             }
             catch (Exception ex)
             {
@@ -70,29 +69,20 @@ public static class AuthCommands
             try
             {
                 var config = ConfigManager.Load();
-                if (config == null || string.IsNullOrEmpty(config.SessionToken))
+                if (config == null || string.IsNullOrEmpty(config.ApiKey))
                 {
-                    Console.WriteLine("Not logged in. Run 'forebay login' first.");
-                    return;
-                }
-
-                if (!config.IsSessionValid())
-                {
-                    Console.WriteLine("Session expired. Run 'forebay login' again.");
+                    Console.WriteLine("Not logged in. Run 'forebay login <api-key>' first.");
                     return;
                 }
 
                 var workerUrl = config.WorkerUrl ?? "https://forebay.workers.dev";
                 var client = new ForebayClient(workerUrl);
-                client.SetSessionToken(config.SessionToken);
+                client.SetApiKey(config.ApiKey);
 
                 var response = await client.WhoAmIAsync();
 
                 Console.WriteLine($"Email: {response.Email}");
-                Console.WriteLine($"Session expires: {DateTimeOffset.FromUnixTimeMilliseconds(response.ExpiresAt):yyyy-MM-dd HH:mm:ss UTC}");
-
-                var daysRemaining = (response.ExpiresAt - DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()) / (24 * 60 * 60 * 1000);
-                Console.WriteLine($"Days remaining: {daysRemaining}");
+                Console.WriteLine($"API Key: {config.ApiKey.Substring(0, Math.Min(10, config.ApiKey.Length))}...");
             }
             catch (ForebayApiException ex)
             {

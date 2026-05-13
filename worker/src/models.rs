@@ -79,6 +79,64 @@ pub struct QueueMetadata {
     pub total_pulled: u64,
 }
 
+// Storage Models
+
+#[derive(Debug, Deserialize)]
+pub struct PutRequest {
+    pub content: serde_json::Value,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PutResponse {
+    pub success: bool,
+    pub key: String,
+    pub size_bytes: usize,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetResponse {
+    pub key: String,
+    pub content: serde_json::Value,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub size_bytes: usize,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DeleteStorageResponse {
+    pub success: bool,
+    pub key: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DocumentInfo {
+    pub key: String,
+    pub size_bytes: usize,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ListDocumentsResponse {
+    pub documents: Vec<DocumentInfo>,
+    pub count: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DocumentMetadata {
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub size_bytes: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StoredDocument {
+    pub content: serde_json::Value,
+    pub metadata: DocumentMetadata,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

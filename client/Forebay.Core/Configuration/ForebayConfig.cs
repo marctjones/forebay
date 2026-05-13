@@ -9,20 +9,7 @@ namespace Forebay.Core.Configuration;
 public class ForebayConfig
 {
     public string? WorkerUrl { get; set; }
-    public string? SessionToken { get; set; }
-    public long? ExpiresAt { get; set; }
-    public string? Email { get; set; }
-
-    public bool IsSessionValid()
-    {
-        if (string.IsNullOrEmpty(SessionToken) || !ExpiresAt.HasValue)
-        {
-            return false;
-        }
-
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        return now < ExpiresAt.Value;
-    }
+    public string? ApiKey { get; set; }
 }
 
 /// <summary>

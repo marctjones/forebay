@@ -8,7 +8,7 @@ namespace Forebay.Core;
 public class ForebayClient
 {
     private readonly HttpClient _httpClient;
-    private string? _sessionToken;
+    private string? _apiKey;
 
     public ForebayClient(HttpClient httpClient)
     {
@@ -19,42 +19,32 @@ public class ForebayClient
     {
     }
 
-    public void SetSessionToken(string sessionToken)
+    public void SetApiKey(string apiKey)
     {
-        _sessionToken = sessionToken;
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", sessionToken);
+        _apiKey = apiKey;
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
     }
 
-    public void ClearSessionToken()
+    public void ClearApiKey()
     {
-        _sessionToken = null;
+        _apiKey = null;
         _httpClient.DefaultRequestHeaders.Authorization = null;
     }
 
+    // Legacy methods for backward compatibility
+    [Obsolete("Use SetApiKey instead")]
+    public void SetSessionToken(string sessionToken) => SetApiKey(sessionToken);
+
+    [Obsolete("Use ClearApiKey instead")]
+    public void ClearSessionToken() => ClearApiKey();
+
     // Authentication methods
-
-    public async Task<LoginResponse> LoginAsync(string idToken, CancellationToken cancellationToken = default)
-    {
-        var request = new LoginRequest { IdToken = idToken };
-        var response = await _httpClient.PostAsJsonAsync("/auth/login", request, cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            await ThrowForebayApiExceptionAsync(response, cancellationToken);
-        }
-
-        var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken)
-            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize login response");
-
-        SetSessionToken(loginResponse.SessionToken);
-        return loginResponse;
-    }
 
     public async Task<WhoamiResponse> WhoAmIAsync(CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(_sessionToken))
+        if (string.IsNullOrEmpty(_apiKey))
         {
-            throw new InvalidOperationException("No session token set. Call LoginAsync first or use SetSessionToken.");
+            throw new InvalidOperationException("No API key set. Use SetApiKey first.");
         }
 
         var response = await _httpClient.GetAsync("/auth/whoami", cancellationToken);
@@ -66,27 +56,6 @@ public class ForebayClient
 
         return await response.Content.ReadFromJsonAsync<WhoamiResponse>(cancellationToken)
             ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize whoami response");
-    }
-
-    public async Task<LogoutResponse> LogoutAsync(CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrEmpty(_sessionToken))
-        {
-            throw new InvalidOperationException("No session token set. Call LoginAsync first or use SetSessionToken.");
-        }
-
-        var response = await _httpClient.PostAsync("/auth/logout", null, cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            await ThrowForebayApiExceptionAsync(response, cancellationToken);
-        }
-
-        var logoutResponse = await response.Content.ReadFromJsonAsync<LogoutResponse>(cancellationToken)
-            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize logout response");
-
-        ClearSessionToken();
-        return logoutResponse;
     }
 
     // Queue methods
@@ -167,13 +136,87 @@ public class ForebayClient
             ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize list queues response");
     }
 
+    // Storage methods
+
+    public async Task<PutResponse> PutDocumentAsync(string key, JsonElement content, CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated();
+
+        var request = new PutRequest { Content = content };
+        var response = await _httpClient.PutAsJsonAsync($"/store/{key}", request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowForebayApiExceptionAsync(response, cancellationToken);
+        }
+
+        return await response.Content.ReadFromJsonAsync<PutResponse>(cancellationToken)
+            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize put response");
+    }
+
+    public async Task<GetResponse> GetDocumentAsync(string key, CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated();
+
+        var response = await _httpClient.GetAsync($"/store/{key}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowForebayApiExceptionAsync(response, cancellationToken);
+        }
+
+        return await response.Content.ReadFromJsonAsync<GetResponse>(cancellationToken)
+            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize get response");
+    }
+
+    public async Task<DeleteStorageResponse> DeleteDocumentAsync(string key, CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated();
+
+        var response = await _httpClient.DeleteAsync($"/store/{key}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowForebayApiExceptionAsync(response, cancellationToken);
+        }
+
+        return await response.Content.ReadFromJsonAsync<DeleteStorageResponse>(cancellationToken)
+            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize delete response");
+    }
+
+    public async Task<ListDocumentsResponse> ListDocumentsAsync(string? prefix = null, int? limit = null, CancellationToken cancellationToken = default)
+    {
+        EnsureAuthenticated();
+
+        var queryParams = new List<string>();
+        if (!string.IsNullOrEmpty(prefix))
+        {
+            queryParams.Add($"prefix={Uri.EscapeDataString(prefix)}");
+        }
+        if (limit.HasValue)
+        {
+            queryParams.Add($"limit={limit.Value}");
+        }
+
+        var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+        var response = await _httpClient.GetAsync($"/store{queryString}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            await ThrowForebayApiExceptionAsync(response, cancellationToken);
+        }
+
+        return await response.Content.ReadFromJsonAsync<ListDocumentsResponse>(cancellationToken)
+            ?? throw new ForebayApiException("INVALID_RESPONSE", "Failed to deserialize list documents response");
+    }
+
     // Helper methods
 
     private void EnsureAuthenticated()
     {
-        if (string.IsNullOrEmpty(_sessionToken))
+        if (string.IsNullOrEmpty(_apiKey))
         {
-            throw new InvalidOperationException("No session token set. Call LoginAsync first or use SetSessionToken.");
+            throw new InvalidOperationException("No API key set. Use SetApiKey first.");
         }
     }
 

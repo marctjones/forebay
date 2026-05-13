@@ -4,6 +4,7 @@ mod auth;
 mod error;
 mod models;
 mod queue;
+mod storage;
 
 #[event(fetch)]
 async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
@@ -28,6 +29,11 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         .get_async("/queues/:queue/stats", queue::handle_stats)
         .delete_async("/queues/:queue", queue::handle_delete)
         .get_async("/queues", queue::handle_list)
+        // Storage endpoints (all require auth via API key)
+        .put_async("/store/*key", storage::handle_put)
+        .get_async("/store/*key", storage::handle_get)
+        .delete_async("/store/*key", storage::handle_delete_document)
+        .get_async("/store", storage::handle_list_documents)
         .run(req, env)
         .await
 }

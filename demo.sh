@@ -283,20 +283,70 @@ demo_queue_management() {
     $CLI_PATH stats temp-batch
 
     print_step "3. Processing all items"
-    $CLI_PATH pull temp-batch > /dev/null
-    $CLI_PATH pull temp-batch > /dev/null
-    $CLI_PATH pull temp-batch > /dev/null
+    $CLI_PATH pull temp-batch 2>/dev/null || true
+    $CLI_PATH pull temp-batch 2>/dev/null || true
+    $CLI_PATH pull temp-batch 2>/dev/null || true
 
-    print_step "4. Cleaning up empty queue"
+    print_step "4. Verifying queue is empty"
+    print_command "$CLI_PATH stats temp-batch"
+    $CLI_PATH stats temp-batch
+
+    print_step "5. Cleaning up empty queue"
     print_command "$CLI_PATH delete temp-batch --force"
     $CLI_PATH delete temp-batch --force
 
     wait_for_user
 }
 
-# Demo 8: Direct API Testing
+# Demo 8: Persistent Storage
+demo_storage() {
+    print_header "Demo 8: Persistent Document Storage"
+
+    print_step "Use Case: Storing persistent data (task lists, notes, configuration)"
+
+    # Store documents
+    print_step "1. Storing a task list"
+    print_command "$CLI_PATH put tasks/todo-list '{\"tasks\":[{\"id\":1,\"text\":\"Review PRs\",\"done\":false},{\"id\":2,\"text\":\"Deploy to prod\",\"done\":false}]}'"
+    $CLI_PATH put tasks/todo-list '{"tasks":[{"id":1,"text":"Review PRs","done":false},{"id":2,"text":"Deploy to prod","done":false}]}'
+
+    print_step "2. Storing a configuration document"
+    print_command "$CLI_PATH put config/app-settings '{\"theme\":\"dark\",\"notifications\":true,\"apiEndpoint\":\"https://api.example.com\"}'"
+    $CLI_PATH put config/app-settings '{"theme":"dark","notifications":true,"apiEndpoint":"https://api.example.com"}'
+
+    print_step "3. Storing a note"
+    print_command "$CLI_PATH put notes/meeting-2026-01-05 '{\"title\":\"Team Meeting\",\"date\":\"2026-01-05\",\"notes\":\"Discussed Q1 roadmap and sprint planning\"}'"
+    $CLI_PATH put notes/meeting-2026-01-05 '{"title":"Team Meeting","date":"2026-01-05","notes":"Discussed Q1 roadmap and sprint planning"}'
+
+    # List documents
+    print_step "4. Listing all documents"
+    print_command "$CLI_PATH list-docs"
+    $CLI_PATH list-docs
+
+    # Filter by prefix
+    print_step "5. Filtering documents by prefix"
+    print_command "$CLI_PATH list-docs --prefix tasks"
+    $CLI_PATH list-docs --prefix tasks
+
+    # Retrieve a document
+    print_step "6. Retrieving a document"
+    print_command "$CLI_PATH get tasks/todo-list --pretty"
+    $CLI_PATH get tasks/todo-list --pretty
+
+    # Update a document
+    print_step "7. Updating a document (marking task as done)"
+    print_command "$CLI_PATH put tasks/todo-list '{\"tasks\":[{\"id\":1,\"text\":\"Review PRs\",\"done\":true},{\"id\":2,\"text\":\"Deploy to prod\",\"done\":false}]}'"
+    $CLI_PATH put tasks/todo-list '{"tasks":[{"id":1,"text":"Review PRs","done":true},{"id":2,"text":"Deploy to prod","done":false}]}'
+
+    print_step "8. Viewing updated document"
+    print_command "$CLI_PATH get tasks/todo-list --pretty"
+    $CLI_PATH get tasks/todo-list --pretty
+
+    wait_for_user
+}
+
+# Demo 9: Direct API Testing
 demo_direct_api() {
-    print_header "Demo 8: Direct API Access (for developers)"
+    print_header "Demo 9: Direct API Access (for developers)"
 
     print_step "Use Case: Using the REST API directly with curl"
 
@@ -352,6 +402,20 @@ cleanup_demo() {
         $CLI_PATH delete "$queue" --force 2>/dev/null || true
     done
 
+    print_step "Cleaning up demo documents..."
+
+    # List of demo documents to clean up
+    demo_docs=(
+        "tasks/todo-list"
+        "config/app-settings"
+        "notes/meeting-2026-01-05"
+    )
+
+    for doc in "${demo_docs[@]}"; do
+        echo "   Deleting $doc..."
+        $CLI_PATH delete-doc "$doc" --force 2>/dev/null || true
+    done
+
     print_step "✓ Demo data cleaned up"
 }
 
@@ -378,6 +442,7 @@ main() {
     demo_event_streaming
     demo_multiple_queues
     demo_queue_management
+    demo_storage
     demo_direct_api
 
     # Cleanup
@@ -393,6 +458,7 @@ main() {
     echo "  ✓ Event streaming for analytics"
     echo "  ✓ Multi-queue priority management"
     echo "  ✓ Queue lifecycle (create, monitor, delete)"
+    echo "  ✓ Persistent document storage (put, get, list, delete)"
     echo "  ✓ Direct REST API access"
     echo ""
     echo -e "${BLUE}Next Steps:${NC}"

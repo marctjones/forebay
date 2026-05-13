@@ -1,26 +1,44 @@
-﻿﻿namespace Forebay.Cli;
+using System.CommandLine;
+using Forebay.Cli.Commands;
+
+namespace Forebay.Cli;
 
 class Program
 {
-    static int Main(string[] args)
+    static async Task<int> Main(string[] args)
     {
-        if (args.Length > 0 && (args[0] == "--version" || args[0] == "-v"))
-        {
-            Console.WriteLine("forebay 0.1.0");
-            return 0;
-        }
+        var rootCommand = new RootCommand("Forebay - Cross-platform message queue transport");
 
-        Console.WriteLine("Forebay - Cross-platform message queue transport");
-        Console.WriteLine();
-        Console.WriteLine("Usage:");
-        Console.WriteLine("  forebay --version                Show version");
-        Console.WriteLine("  forebay login                    Authenticate with Google OAuth");
-        Console.WriteLine("  forebay push <queue> [message]   Push message to queue");
-        Console.WriteLine("  forebay pull <queue>             Pull message from queue");
-        Console.WriteLine("  forebay list                     List all queues");
-        Console.WriteLine();
-        Console.WriteLine("Run 'forebay <command> --help' for more information on a command.");
+        // Global options
+        var workerUrlOption = new Option<string?>(
+            new[] { "--worker-url", "-w" },
+            "Worker URL (overrides config file)"
+        );
+        rootCommand.Add(workerUrlOption);
 
-        return 0;
+        var verboseOption = new Option<bool>(
+            new[] { "--verbose", "-v" },
+            "Enable verbose output"
+        );
+        rootCommand.Add(verboseOption);
+
+        // Add commands
+        // Authentication
+        rootCommand.Add(AuthCommands.CreateLoginCommand());
+        rootCommand.Add(AuthCommands.CreateLogoutCommand());
+        rootCommand.Add(AuthCommands.CreateWhoamiCommand());
+        // Queue operations
+        rootCommand.Add(QueueCommands.CreatePushCommand());
+        rootCommand.Add(QueueCommands.CreatePullCommand());
+        rootCommand.Add(QueueCommands.CreateStatsCommand());
+        rootCommand.Add(QueueCommands.CreateListCommand());
+        rootCommand.Add(QueueCommands.CreateDeleteCommand());
+        // Storage operations
+        rootCommand.Add(StorageCommands.CreatePutCommand());
+        rootCommand.Add(StorageCommands.CreateGetCommand());
+        rootCommand.Add(StorageCommands.CreateListDocumentsCommand());
+        rootCommand.Add(StorageCommands.CreateDeleteDocumentCommand());
+
+        return await rootCommand.InvokeAsync(args);
     }
 }
