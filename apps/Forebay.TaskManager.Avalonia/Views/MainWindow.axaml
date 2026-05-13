@@ -1,0 +1,65 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Forebay.TaskManager.Avalonia.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
+        x:Class="Forebay.TaskManager.Avalonia.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Forebay Task Manager"
+        Width="600" Height="500">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Refresh" Command="{Binding LoadTasksCommand}" />
+                <Separator />
+                <MenuItem Header="E_xit" Click="ExitMenuItem_Click" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About" Click="AboutMenuItem_Click" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Status Bar -->
+        <Border DockPanel.Dock="Bottom" Background="LightGray" Padding="5">
+            <TextBlock Text="{Binding StatusMessage}" />
+        </Border>
+
+        <!-- Main Content -->
+        <Grid RowDefinitions="Auto,*" Margin="10">
+            <!-- Add Task Section -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
+                <TextBlock Text="New Task:" VerticalAlignment="Center" FontWeight="Bold"/>
+                <TextBox Text="{Binding NewTaskText}" Width="300" Watermark="Enter task description..." />
+                <Button Content="Add Task" Command="{Binding AddTaskCommand}" />
+            </StackPanel>
+
+            <!-- Task List -->
+            <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" CornerRadius="4">
+                <ListBox ItemsSource="{Binding Tasks}" Margin="5">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="vm:TaskItemViewModel">
+                            <DockPanel Margin="5">
+                                <Button DockPanel.Dock="Right"
+                                        Content="Delete"
+                                        Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).DeleteTaskCommand}"
+                                        CommandParameter="{Binding}"
+                                        Margin="10,0,0,0"/>
+                                <CheckBox IsChecked="{Binding Done}"
+                                          Content="{Binding Text}"
+                                          VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>
