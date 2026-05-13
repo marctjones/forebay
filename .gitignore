@@ -25,3 +25,11 @@ Thumbs.db
 # .NET
 **/bin/
 **/obj/
+
+# Node (worker scaffolding, Wrangler runtime)
+node_modules/
+worker/.wrangler/
+
+# Local logs
+*.log
+daemon.log
